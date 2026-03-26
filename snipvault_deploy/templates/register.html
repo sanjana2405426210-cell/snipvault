@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Register — SnipVault</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a class="brand" href="/">Snip<span>Vault</span></a>
+  <div class="nav-links"><a href="/">Login</a></div>
+</nav>
+<div class="auth-wrap">
+  <div class="card">
+    <h2>Create account</h2>
+    <p class="sub">Start saving your snippets</p>
+    {% if error %}
+      <div class="error-msg">{{ error }}</div>
+    {% endif %}
+    <form method="post">
+      <label>Username</label>
+      <input name="username" placeholder="username" required>
+      <label>Password</label>
+      <input name="password" type="password" placeholder="•••••••• (min 6 chars)" required>
+      <button type="submit" class="btn btn-primary">Create Account →</button>
+    </form>
+    <p style="text-align:center;margin-top:16px;font-size:0.83rem;color:#666">
+      Have an account? <a href="/" style="color:#7c6eff;text-decoration:none">Login</a>
+    </p>
+  </div>
+</div>
+</body>
+</html>

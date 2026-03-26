@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Add Snippet — SnipVault</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  /* Small style fix for the privacy checkbox */
+  .privacy-toggle {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .privacy-toggle input { width: auto; margin: 0; cursor: pointer; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a class="brand" href="/dashboard">Snip<span>Vault</span></a>
+  <div class="nav-links"><a href="/dashboard">← Back</a></div>
+</nav>
+
+<div class="page" style="max-width:640px">
+  <div class="card" style="max-width:100%">
+    <h2>New Snippet</h2>
+    <p class="sub">Save a piece of code</p>
+
+    <!-- Drag & Drop Zone -->
+    <div id="drop-zone" class="drop-zone">
+      <div class="dz-icon">📂</div>
+      <p class="dz-text">Drag & drop a file or folder here</p>
+      <p class="dz-sub">Supports .py .js .html .css .java .cpp</p>
+      <div id="dz-filelist" class="dz-filelist"></div>
+    </div>
+
+    <form method="post">
+      <label>Title</label>
+      <input name="title" id="snippet-title" placeholder="e.g. Binary search" required>
+
+      <label>Language</label>
+      <select name="language" id="language-select">
+        <option value="Python">Python</option>
+        <option value="JavaScript">JavaScript</option>
+        <option value="HTML">HTML</option>
+        <option value="CSS">CSS</option>
+        <option value="Java">Java</option>
+        <option value="SQL">SQL</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label>Code</label>
+      <textarea name="code" id="snippet-code" placeholder="Paste your code…"></textarea>
+
+      <label>Description</label>
+      <textarea name="description" placeholder="What does it do?" style="font-family:'Inter',sans-serif;min-height:70px"></textarea>
+
+      <!-- FEATURE: Public/Private Toggle -->
+      <label class="privacy-toggle">
+        <input type="checkbox" name="is_public" value="1"> 
+        <span> <strong>Make Public</strong> (This snippet will appear in the "Explore" feed)</span>
+      </label>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Save Snippet →</button>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  const zone   = document.getElementById('drop-zone');
+  const list   = document.getElementById('dz-filelist');
+  const codeTA = document.getElement

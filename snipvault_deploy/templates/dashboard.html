@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SnipVault — Dashboard</title>
+  
+  <!-- Prism.js Syntax Highlighting CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css">
+  
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    /* Styling for the buttons and badges */
+    .btn-download { color: #2ecc71 !important; border-color: #2ecc71 !important; }
+    /* New style for Copy Button */
+    .btn-copy { background: #6c757d; color: white !important; border: none !important; cursor: pointer; }
+    .badge-pub { background: #e1f5fe; color: #0288d1; border: 1px solid #b3e5fc; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
+    .s-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
+    pre[class*="language-"] { border-radius: 6px; margin: 10px 0; font-size: 0.9rem; max-height: 300px; position: relative; }
+  </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <a class="brand" href="/dashboard">Snip<span>Vault</span></a>
+  <div class="nav-links">
+    <a href="/explore" style="margin-right: 15px;">🌐 Explore</a>
+    <span style="color:#aaa;font-size:0.85rem">👤 {{ session.get('user_name','') }}</span>
+    <a href="/favorites">⭐ Favorites</a>
+    <a href="/add" class="primary">+ New</a>
+    <a href="/logout" style="color:#ff6b6b">Logout</a>
+  </div>
+</nav>
+
+<div class="page">
+  <h2 style="margin-bottom: 5px;">{{ view_title if view_title else 'My Vault' }}</h2>
+  <div class="search-box">
+    <input id="q" type="text" placeholder="Search by title, language, or description..." value="{{ request.args.get('q','') }}">
+  </div>
+
+  <div class="chips">
+    <a class="chip" href="/dashboard">All</a>
+    <a class="chip" href="/filter/Python">Python</a>
+    <a class="chip" href="/filter/JavaScript">JavaScript</a>
+    <a class="chip" href="/filter/HTML">HTML</a>
+    <a class="chip" href="/filter/CSS">CSS</a>
+    <a class="chip" href="/filter/SQL">SQL</a>
+  </div>
+
+  <div class="grid" id="grid">
+
+  {% for s in snippets %}
+    {% set lang = s.language|lower %}
+
+    {% if lang == 'python' %}{% set bc = 'b-py' %}
+    {% elif lang in ['javascript','js'] %}{% set bc = 'b-js' %}
+    {% elif lang == 'html' %}{% set bc = 'b-html' %}
+    {% elif lang == 'css' %}{% set bc = 'b-css' %}
+    {% else %}{% set bc = 'b-def' %}{% endif %}
+
+    <div class="s-card" data-search="{{ (s.title + ' ' + s.language + ' ' + (s.description or ''))|lower }}">
+
+      <div class="s-head">
+        <div>
+            <span class="s-title">{{ s.title }}</span>
+            {% if s.is_public %}<span class="badge-pub">🌎 Public</span>{% endif %}
+        </div>
+        <span class="badge {{ bc }}">{{ s.language }}</span>
+      </div>
+
+      <!-- ADDED ID to the code tag for Javascript selection -->
+      <pre class="language-{{ lang }}"><code id="code-{{ s.id }}" class="language-{{ lang }}">{{ s.code }}</code></pre>
+
+      {% if s.description %}
+        <p class="s-desc">{{ s.description }}</p>
+      {% endif %}
+
+      <div class="s-actions">
+        <!-- FEATURE: Copy Button -->
+        <button class="btn-sm btn-copy" onclick="copySnippet('{{ s.id }}', this)">
+           Copy
+        </button>
+
+        <a href="/fav/{{ s.id }}" class="btn-sm btn-fav {% if s.is_favorite %}active{% endif %}">
+          {% if s.is_favorite %}⭐{% else %}☆{% endif %} Fav
+        </a>
+
+        <a href="/download/{{ s.id }}" class="btn-sm btn-download">⬇️ Download</a>
+
+        {% if session.get('user_id') == s.user_id %}
+            <a href="/edit/{{ s.id }}" class="btn-sm btn-edit">✏ Edit</a>
+            <a href="/delete/{{ s.id }}" class="btn-sm btn-del" onclick="return confirm('Delete this snippet?')">🗑 Delete</a>
+        {% endif %}
+      </div>
+
+    </div>
+
+  {% else %}
+    <div class="empty">
+      <p>No snippets found in this vault.</p>
+      <a href="/add" class="btn btn-primary">Add your first snippet →</a>
+    </div>
+  {% endfor %}
+
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<!-- Prism.js Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-css.min.js"></script>
+
+<script>
+// --- NEW: Copy Functionality ---
+async function copySnippet(id, btnElement) {
+    const codeText = document.getElementById(`code-${id}`).innerText;
+
+    try {
+        await navigator.clipboard.writeText(codeText);
+
+        // Feedback: UI updates
+        const originalText = btnElement.innerHTML;
+        btnElement.innerHTML = "✅ Copied!";
+        btnElement.style.background = "#2ecc71";
+
+        // Show toast notification
+        toast("Code copied to clipboard!", "t-ok");
+
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            btnElement.innerHTML = originalText;
+            btnElement.style.background = "#6c757d";
+        }, 2000);
+    } catch (err) {
+        toast("Failed to copy", "t-err");
+    }
+}
+
+// --- Existing Search Functionality ---
+const q = document.getElementById('q');
+const cards = [...document.querySelectorAll('.s-card')];
+
+q.addEventListener('input', () => {
+  const v = q.value.toLowerCase();
+  cards.forEach(c =>
+    c.style.display = c.dataset.search.includes(v) ? '' : 'none'
+  );
+});
+
+if (q.value) q.dispatchEvent(new Event('input'));
+
+// --- Existing Toast Functionality ---
+function toast(msg, cls) {
+  const d = document.createElement('div');
+  d.className = 'toast ' + cls;
+  d.textContent = msg;
+  document.getElementById('toasts').appendChild(d);
+  setTimeout(() => d.remove(), 2800);
+}
+</script>
+
+</body>
+</html>
