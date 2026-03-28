@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Add Snippet — SnipVault</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a class="brand" href="/dashboard">Snip<span>Vault</span></a>
+  <div class="nav-links"><a href="/dashboard">← Back</a></div>
+</nav>
+<div class="page" style="max-width:640px">
+  <div class="card" style="max-width:100%">
+    <h2>New Snippet</h2>
+    <p class="sub">Save a piece of code</p>
+    <!-- ✏ ADDED: Drag & Drop Zone -->
+    <div id="drop-zone" class="drop-zone">
+      <div class="dz-icon">📂</div>
+      <p class="dz-text">Drag & drop a file or folder here</p>
+      <p class="dz-sub">Supports .py .js .html .css .java .cpp</p>
+      <div id="dz-filelist" class="dz-filelist"></div>
+    </div>
+    <!-- END Drag & Drop Zone -->
+    <form method="post">
+      <label>Title</label>
+      <input name="title" placeholder="e.g. Binary search" required>
+      <label>Language</label>
+      <select name="language">
+        <option>Python</option><option>JavaScript</option>
+        <option>HTML</option><option>CSS</option>
+        <option>Java</option><option>SQL</option><option>Other</option>
+      </select>
+      <label>Code</label>
+      <textarea name="code" placeholder="Paste your code…"></textarea>
+      <label>Description</label>
+      <textarea name="description" placeholder="What does it do?" style="font-family:'Inter',sans-serif;min-height:70px"></textarea>
+      <button type="submit" class="btn btn-primary">Save Snippet →</button>
+    </form>
+  </div>
+</div>
+<!-- ✏ ADDED: Drag & Drop JavaScript -->
+<script>
+(function () {
+  const zone   = document.getElementById('drop-zone');
+  const list   = document.getElementById('dz-filelist');
+  const codeTA = document.querySelector('textarea[name="code"]');
+  const titleI = document.querySelector('input[name="title"]');
+  const langSel= document.querySelector('select[name="language"]');
+
+  const EXT_MAP = {
+    py:'Python', js:'JavaScript', html:'HTML',
+    css:'CSS', java:'Java', cpp:'C++'
+  };
+
+  function langFromExt(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    return EXT_MAP[ext] || null;
+  }
+
+  function addChip(name) {
+    const chip = document.createElement('span');
+    chip.className = 'dz-chip';
+    chip.textContent = name;
+    list.appendChild(chip);
+  }
+
+  function readFile(file, first) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      if (first) {
+        codeTA.value = e.target.result;
+        // Auto-fill title from filename (strip extension)
+        titleI.value = file.name.replace(/\.[^.]+$/, '');
+        // Auto-detect language
+        const lang = langFromExt(file.name);
+        if (lang) {
+          [...langSel.options].forEach(o => { o.selected = o.value === lang; });
+        }
+      } else {
+        codeTA.value += '\n\n/* --- ' + file.name + ' --- */\n' + e.target.result;
+      }
+      addChip(file.name);
+    };
+    reader.readAsText(file);
+  }
+
+  function handleEntries(entries) {
+    let first = list.children.length === 0;
+    function walk(entry) {
+      if (entry.isFile) {
+        entry.file(f => { readFile(f, first); first = false; });
+      } else if (entry.isDirectory) {
+        const reader = entry.createReader();
+        reader.readEntries(sub => sub.forEach(walk));
+      }
+    }
+    entries.forEach(walk);
+  }
+
+  zone.addEventListener('dragover', e => {
+    e.preventDefault(); zone.classList.add('dz-over');
+  });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dz-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('dz-over');
+    list.innerHTML = '';
+    const items = [...e.dataTransfer.items];
+    if (items.length && items[0].webkitGetAsEntry) {
+      handleEntries(items.map(i => i.webkitGetAsEntry()).filter(Boolean));
+    } else {
+      [...e.dataTransfer.files].forEach((f, i) => readFile(f, i === 0));
+    }
+  });
+})();
+</script>
+<!-- END Drag & Drop JavaScript -->
+</body>
+</html>

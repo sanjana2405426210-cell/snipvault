@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edit Snippet — SnipVault</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a class="brand" href="/dashboard">Snip<span>Vault</span></a>
+  <div class="nav-links"><a href="/dashboard">← Back</a></div>
+</nav>
+<div class="page" style="max-width:640px">
+  <div class="card" style="max-width:100%">
+    <h2>Edit Snippet</h2>
+    <p class="sub">Update your saved code</p>
+    <form method="post">
+      <label>Title</label>
+      <input name="title" placeholder="e.g. Binary search" required value="{{ snippet[1] }}">
+      <label>Language</label>
+      <select name="language">
+        <option {% if snippet[3]=='Python' %}selected{% endif %}>Python</option>
+        <option {% if snippet[3]=='JavaScript' %}selected{% endif %}>JavaScript</option>
+        <option {% if snippet[3]=='HTML' %}selected{% endif %}>HTML</option>
+        <option {% if snippet[3]=='CSS' %}selected{% endif %}>CSS</option>
+        <option {% if snippet[3]=='Java' %}selected{% endif %}>Java</option>
+        <option {% if snippet[3]=='SQL' %}selected{% endif %}>SQL</option>
+        <option {% if snippet[3]=='Other' %}selected{% endif %}>Other</option>
+      </select>
+      <label>Code</label>
+      <textarea name="code" placeholder="Paste your code…">{{ snippet[2] }}</textarea>
+      <label>Description</label>
+      <textarea name="description" placeholder="What does it do?" style="font-family:'Inter',sans-serif;min-height:70px">{{ snippet[4] or '' }}</textarea>
+      <button type="submit" class="btn btn-primary">Update Snippet →</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

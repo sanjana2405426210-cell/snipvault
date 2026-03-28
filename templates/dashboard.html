@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SnipVault</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<nav class="navbar">
+  <a class="brand" href="/dashboard">Snip<span>Vault</span></a>
+  <div class="nav-links">
+    <span style="color:#aaa;font-size:0.85rem">👤 {{ session.get('user','') }}</span>
+    <a href="/favorites">⭐ Favorites</a>
+    <a href="/add" class="primary">+ New</a>
+    <a href="/logout" style="color:#ff6b6b">Logout</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="search-box">
+    <input id="q" type="text" placeholder="Search snippets…" value="{{ request.args.get('q','') }}">
+  </div>
+
+  <div class="chips">
+    <a class="chip" href="/dashboard">All</a>
+    <a class="chip" href="/filter/python">Python</a>
+    <a class="chip" href="/filter/javascript">JavaScript</a>
+    <a class="chip" href="/filter/html">HTML</a>
+    <a class="chip" href="/filter/css">CSS</a>
+  </div>
+
+  <div class="grid" id="grid">
+
+  {% for s in snippets %}
+    {% set lang = s[3]|lower %}
+
+    {% if lang == 'python' %}
+      {% set bc = 'b-py' %}
+    {% elif lang in ['javascript','js'] %}
+      {% set bc = 'b-js' %}
+    {% elif lang == 'html' %}
+      {% set bc = 'b-html' %}
+    {% elif lang == 'css' %}
+      {% set bc = 'b-css' %}
+    {% else %}
+      {% set bc = 'b-def' %}
+    {% endif %}
+
+    <div class="s-card" data-search="{{ (s[1]+' '+s[3]+' '+(s[4] or ''))|lower }}">
+
+      <div class="s-head">
+        <span class="s-title">{{ s[1] }}</span>
+        <span class="badge {{ bc }}">{{ s[3] }}</span>
+      </div>
+
+      <pre class="code">{{ s[2] }}</pre>
+
+      {% if s[4] %}
+        <p class="s-desc">{{ s[4] }}</p>
+      {% endif %}
+
+      <div class="s-actions">
+        <a href="/fav/{{ s[0] }}" class="btn-sm btn-fav {% if s[5] %}active{% endif %}">
+          {% if s[5] %}⭐{% else %}☆{% endif %} Fav
+        </a>
+        <a href="/edit/{{ s[0] }}" class="btn-sm btn-edit">✏ Edit</a>
+        <a href="/delete/{{ s[0] }}" class="btn-sm btn-del"
+           onclick="return confirm('Delete?')">🗑 Delete</a>
+      </div>
+
+    </div>
+
+  {% else %}
+    <div class="empty">
+      No snippets found.
+      <a href="/add" style="color:#7c6eff">Add one →</a>
+    </div>
+  {% endfor %}
+
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+const q = document.getElementById('q');
+const cards = [...document.querySelectorAll('.s-card')];
+
+q.addEventListener('input', () => {
+  const v = q.value.toLowerCase();
+  cards.forEach(c =>
+    c.style.display = c.dataset.search.includes(v) ? '' : 'none'
+  );
+});
+
+if (q.value) q.dispatchEvent(new Event('input'));
+
+if (document.referrer.includes('/add'))
+  toast('Snippet saved!', 't-ok');
+
+function toast(msg, cls) {
+  const d = document.createElement('div');
+  d.className = 'toast ' + cls;
+  d.textContent = msg;
+  document.getElementById('toasts').appendChild(d);
+  setTimeout(() => d.remove(), 2800);
+}
+</script>
+
+</body>
+</html>
